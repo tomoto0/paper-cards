@@ -1,17 +1,10 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, bigint } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
  */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
@@ -25,4 +18,39 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Keywords table for paper search
+ */
+export const keywords = mysqlTable("keywords", {
+  id: int("id").autoincrement().primaryKey(),
+  keyword: varchar("keyword", { length: 255 }).notNull().unique(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Keyword = typeof keywords.$inferSelect;
+export type InsertKeyword = typeof keywords.$inferInsert;
+
+/**
+ * Papers table for storing fetched papers
+ */
+export const papers = mysqlTable("papers", {
+  id: int("id").autoincrement().primaryKey(),
+  arxivId: varchar("arxivId", { length: 64 }).notNull().unique(),
+  title: text("title").notNull(),
+  titleJa: text("titleJa"),
+  authors: text("authors").notNull(),
+  abstract: text("abstract").notNull(),
+  abstractJa: text("abstractJa"),
+  journal: varchar("journal", { length: 255 }),
+  publishedAt: bigint("publishedAt", { mode: "number" }),
+  arxivUrl: varchar("arxivUrl", { length: 512 }).notNull(),
+  pdfUrl: varchar("pdfUrl", { length: 512 }),
+  keyword: varchar("keyword", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Paper = typeof papers.$inferSelect;
+export type InsertPaper = typeof papers.$inferInsert;

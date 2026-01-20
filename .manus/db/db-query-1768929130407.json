@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, arxivId, titleJa, abstractJa FROM papers WHERE titleJa IS NOT NULL AND titleJa != '' LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zCbyUsH1hyXte9H.c4a1d94661b5 --database 4MgSpU34WjiKekesbHZ87M --execute SELECT id, arxivId, titleJa, abstractJa FROM papers WHERE titleJa IS NOT NULL AND titleJa != '' LIMIT 3;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 56
+}

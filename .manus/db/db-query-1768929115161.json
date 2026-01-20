@@ -1,0 +1,50 @@
+{
+  "query": "SELECT id, arxivId, title, titleJa, LEFT(abstract, 100) as abstract_preview, LEFT(abstractJa, 100) as abstractJa_preview FROM papers LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zCbyUsH1hyXte9H.c4a1d94661b5 --database 4MgSpU34WjiKekesbHZ87M --execute SELECT id, arxivId, title, titleJa, LEFT(abstract, 100) as abstract_preview, LEFT(abstractJa, 100) as abstractJa_preview FROM papers LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "arxivId": "2601.11517",
+      "title": "Do explanations generalize across large reasoning models?",
+      "titleJa": "",
+      "abstract_preview": "Large reasoning models (LRMs) produce a textual chain of thought (CoT) in the process of solving a p",
+      "abstractJa_preview": ""
+    },
+    {
+      "id": "2",
+      "arxivId": "2601.11516",
+      "title": "Building Production-Ready Probes For Gemini",
+      "titleJa": "",
+      "abstract_preview": "Frontier language model capabilities are improving rapidly. We thus need stronger mitigations agains",
+      "abstractJa_preview": ""
+    },
+    {
+      "id": "3",
+      "arxivId": "2601.11514",
+      "title": "ShapeR: Robust Conditional 3D Shape Generation from Casual Captures",
+      "titleJa": "",
+      "abstract_preview": "Recent advances in 3D shape generation have achieved impressive results, but most existing methods r",
+      "abstractJa_preview": ""
+    },
+    {
+      "id": "4",
+      "arxivId": "2601.11513",
+      "title": "Capacity Constraints Make Admissions Processes Less Predictable",
+      "titleJa": "",
+      "abstract_preview": "Machine learning models are often used to make predictions about admissions process outcomes, such a",
+      "abstractJa_preview": ""
+    },
+    {
+      "id": "5",
+      "arxivId": "2601.11510",
+      "title": "Applying Formal Methods Tools to an Electronic Warfare Codebase (Experience report)",
+      "titleJa": "",
+      "abstract_preview": "While using formal methods offers advantages over unit testing, their steep learning curve can be da",
+      "abstractJa_preview": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tarxivId\ttitle\ttitleJa\tabstract_preview\tabstractJa_preview\n1\t2601.11517\tDo explanations generalize across large reasoning models?\t\tLarge reasoning models (LRMs) produce a textual chain of thought (CoT) in the process of solving a p\t\n2\t2601.11516\tBuilding Production-Ready Probes For Gemini\t\tFrontier language model capabilities are improving rapidly. We thus need stronger mitigations agains\t\n3\t2601.11514\tShapeR: Robust Conditional 3D Shape Generation from Casual Captures\t\tRecent advances in 3D shape generation have achieved impressive results, but most existing methods r\t\n4\t2601.11513\tCapacity Constraints Make Admissions Processes Less Predictable\t\tMachine learning models are often used to make predictions about admissions process outcomes, such a\t\n5\t2601.11510\tApplying Formal Methods Tools to an Electronic Warfare Codebase (Experience report)\t\tWhile using formal methods offers advantages over unit testing, their steep learning curve can be da\t\n",
+  "stderr": "",
+  "execution_time_ms": 139
+}

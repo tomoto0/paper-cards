@@ -18,3 +18,7 @@
 
 ## Automation
 - [ ] Scheduled paper fetching (9:00 and 21:00 daily)
+
+## OGP Settings
+- [x] Generate OGP image for social media sharing
+- [x] Set og:image meta tag in index.html

@@ -188,6 +188,9 @@ export default function Home() {
       </header>
 
       <main className="container py-6">
+        {/* SEO H2 heading - hidden visually but accessible to search engines */}
+        <h2 className="sr-only">arXiv論文の自動収集とAI翻訳機能</h2>
+        
         {/* Settings Panel */}
         {showSettings && (
           <Card className="mb-6 border-indigo-200 bg-gradient-to-br from-white to-indigo-50/30">

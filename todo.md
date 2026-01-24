@@ -22,3 +22,9 @@
 ## OGP Settings
 - [x] Generate OGP image for social media sharing
 - [x] Set og:image meta tag in index.html
+
+## SEO Optimization
+- [x] Add keywords meta tag
+- [x] Add H2 headings to main page
+- [x] Optimize title length (30-60 characters)
+- [x] Optimize description length (50-160 characters)

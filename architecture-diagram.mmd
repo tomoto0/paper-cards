@@ -1,0 +1,39 @@
+graph TB
+    subgraph Client["Frontend Layer"]
+        UI["React UI Components<br/>- Paper Cards<br/>- Keyword Manager<br/>- Sort Controls"]
+        TRPCClient["tRPC Client<br/>Type-safe API calls"]
+    end
+    
+    subgraph Server["Backend Layer"]
+        Express["Express Server<br/>Node.js Runtime"]
+        TRPCServer["tRPC Router<br/>- keywords<br/>- papers<br/>- system"]
+        DBHelpers["Database Helpers<br/>- Query Functions<br/>- Data Operations"]
+    end
+    
+    subgraph External["External APIs"]
+        ArxivAPI["arXiv API<br/>Paper Search<br/>XML Parsing"]
+        OpenAIAPI["OpenAI API<br/>Japanese Translation<br/>LLM Processing"]
+    end
+    
+    subgraph Storage["Data Storage"]
+        Database["MySQL Database<br/>- users<br/>- keywords<br/>- papers"]
+    end
+    
+    UI -->|tRPC Calls| TRPCClient
+    TRPCClient -->|HTTP/JSON| Express
+    Express -->|Route Handling| TRPCServer
+    TRPCServer -->|Query/Mutate| DBHelpers
+    DBHelpers -->|SQL| Database
+    
+    TRPCServer -->|REST Call| ArxivAPI
+    ArxivAPI -->|XML Response| TRPCServer
+    
+    TRPCServer -->|API Request| OpenAIAPI
+    OpenAIAPI -->|JSON Response| TRPCServer
+    
+    TRPCServer -->|Store Results| DBHelpers
+    
+    style Client fill:#e1f5ff
+    style Server fill:#f3e5f5
+    style External fill:#fff3e0
+    style Storage fill:#e8f5e9

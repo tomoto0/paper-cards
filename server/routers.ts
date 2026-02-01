@@ -18,74 +18,133 @@ import {
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 
-// arXiv API helper
+// arXiv API helper with timeout and retry logic
 async function fetchPapersFromArxiv(keyword: string, maxResults: number = 10): Promise<any[]> {
   const query = encodeURIComponent(keyword);
-  const url = `http://export.arxiv.org/api/query?search_query=all:${query}&start=0&max_results=${maxResults}&sortBy=submittedDate&sortOrder=descending`;
+  const url = `https://export.arxiv.org/api/query?search_query=all:${query}&start=0&max_results=${maxResults}&sortBy=submittedDate&sortOrder=descending`;
   
-  try {
-    const response = await fetch(url);
-    const text = await response.text();
-    
-    // Parse XML response
-    const papers: any[] = [];
-    const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
-    let match;
-    
-    while ((match = entryRegex.exec(text)) !== null) {
-      const entry = match[1];
+  const maxRetries = 3;
+  const timeout = 15000; // 15 seconds
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[arXiv] Fetching papers for "${keyword}" (attempt ${attempt}/${maxRetries})...`);
       
-      const getId = (str: string) => {
-        const m = str.match(/<id>([\s\S]*?)<\/id>/);
-        return m ? m[1].trim() : '';
-      };
-      const getTitle = (str: string) => {
-        const m = str.match(/<title>([\s\S]*?)<\/title>/);
-        return m ? m[1].replace(/\s+/g, ' ').trim() : '';
-      };
-      const getSummary = (str: string) => {
-        const m = str.match(/<summary>([\s\S]*?)<\/summary>/);
-        return m ? m[1].replace(/\s+/g, ' ').trim() : '';
-      };
-      const getPublished = (str: string) => {
-        const m = str.match(/<published>([\s\S]*?)<\/published>/);
-        return m ? m[1].trim() : '';
-      };
-      const getAuthors = (str: string) => {
-        const authors: string[] = [];
-        const authorRegex = /<author>[\s\S]*?<name>([\s\S]*?)<\/name>[\s\S]*?<\/author>/g;
-        let am;
-        while ((am = authorRegex.exec(str)) !== null) {
-          authors.push(am[1].trim());
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Paper-Catcher/1.0 (academic research tool)'
         }
-        return authors.join(', ');
-      };
-      const getCategory = (str: string) => {
-        const m = str.match(/<arxiv:primary_category[^>]*term="([^"]+)"/);
-        return m ? m[1] : 'arXiv';
-      };
-      
-      const idUrl = getId(entry);
-      const arxivId = idUrl.split('/abs/')[1]?.split('v')[0] || idUrl.split('/').pop()?.split('v')[0] || '';
-      
-      papers.push({
-        arxivId,
-        title: getTitle(entry),
-        authors: getAuthors(entry),
-        abstract: getSummary(entry),
-        publishedAt: new Date(getPublished(entry)).getTime(),
-        arxivUrl: idUrl.replace('http://', 'https://'),
-        pdfUrl: idUrl.replace('/abs/', '/pdf/').replace('http://', 'https://') + '.pdf',
-        journal: getCategory(entry),
-        keyword,
       });
+      
+      clearTimeout(timeoutId);
+      
+      // Check HTTP status
+      if (!response.ok) {
+        console.error(`[arXiv] HTTP ${response.status}: ${response.statusText}`);
+        if (response.status === 429 || response.status === 503) {
+          // Rate limited or service unavailable - wait and retry
+          const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+          console.log(`[arXiv] Rate limited/unavailable. Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const text = await response.text();
+      
+      // Check if response is valid XML
+      if (!text.includes('<?xml') && !text.includes('<feed')) {
+        console.error('[arXiv] Invalid response format - not XML');
+        throw new Error('Invalid arXiv API response format');
+      }
+      
+      // Parse XML response
+      const papers: any[] = [];
+      const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+      let match;
+      
+      while ((match = entryRegex.exec(text)) !== null) {
+        const entry = match[1];
+        
+        const getId = (str: string) => {
+          const m = str.match(/<id>([\s\S]*?)<\/id>/);
+          return m ? m[1].trim() : '';
+        };
+        const getTitle = (str: string) => {
+          const m = str.match(/<title>([\s\S]*?)<\/title>/);
+          return m ? m[1].replace(/\s+/g, ' ').trim() : '';
+        };
+        const getSummary = (str: string) => {
+          const m = str.match(/<summary>([\s\S]*?)<\/summary>/);
+          return m ? m[1].replace(/\s+/g, ' ').trim() : '';
+        };
+        const getPublished = (str: string) => {
+          const m = str.match(/<published>([\s\S]*?)<\/published>/);
+          return m ? m[1].trim() : '';
+        };
+        const getAuthors = (str: string) => {
+          const authors: string[] = [];
+          const authorRegex = /<author>[\s\S]*?<name>([\s\S]*?)<\/name>[\s\S]*?<\/author>/g;
+          let am;
+          while ((am = authorRegex.exec(str)) !== null) {
+            authors.push(am[1].trim());
+          }
+          return authors.join(', ');
+        };
+        const getCategory = (str: string) => {
+          const m = str.match(/<arxiv:primary_category[^>]*term="([^"]+)"/);
+          return m ? m[1] : 'arXiv';
+        };
+        
+        const idUrl = getId(entry);
+        const arxivId = idUrl.split('/abs/')[1]?.split('v')[0] || idUrl.split('/').pop()?.split('v')[0] || '';
+        
+        if (arxivId) {
+          papers.push({
+            arxivId,
+            title: getTitle(entry),
+            authors: getAuthors(entry),
+            abstract: getSummary(entry),
+            publishedAt: new Date(getPublished(entry)).getTime(),
+            arxivUrl: idUrl.replace('http://', 'https://'),
+            pdfUrl: idUrl.replace('/abs/', '/pdf/').replace('http://', 'https://') + '.pdf',
+            journal: getCategory(entry),
+            keyword,
+          });
+        }
+      }
+      
+      console.log(`[arXiv] Successfully fetched ${papers.length} papers for "${keyword}"`);
+      return papers;
+      
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          console.warn(`[arXiv] Request timeout for "${keyword}" (attempt ${attempt}/${maxRetries})`);
+        } else {
+          console.error(`[arXiv] Error on attempt ${attempt}/${maxRetries}:`, error.message);
+        }
+      }
+      
+      // If last attempt, give up
+      if (attempt === maxRetries) {
+        console.error(`[arXiv] Failed to fetch papers after ${maxRetries} attempts`);
+        return [];
+      }
+      
+      // Wait before retry with exponential backoff
+      const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+      console.log(`[arXiv] Retrying in ${waitTime}ms...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
     }
-    
-    return papers;
-  } catch (error) {
-    console.error('[arXiv] Failed to fetch papers:', error);
-    return [];
   }
+  
+  return [];
 }
 
 // LLM translation helper
@@ -199,30 +258,54 @@ export const appRouter = router({
       }
       
       let totalAdded = 0;
+      const errors: string[] = [];
       
       for (const kw of activeKeywords) {
-        const arxivPapers = await fetchPapersFromArxiv(kw.keyword, 10);
-        
-        for (const paper of arxivPapers) {
-          // Check if already exists
-          const existing = await getPaperByArxivId(paper.arxivId);
-          if (existing) continue;
+        try {
+          const arxivPapers = await fetchPapersFromArxiv(kw.keyword, 10);
           
-          // Translate using LLM
-          const { titleJa, abstractJa } = await translateToJapanese(paper.title, paper.abstract);
-          
-          // Add to database
-          const added = await addPaper({
-            ...paper,
-            titleJa,
-            abstractJa,
-          });
-          
-          if (added) totalAdded++;
+          for (const paper of arxivPapers) {
+            try {
+              // Check if already exists
+              const existing = await getPaperByArxivId(paper.arxivId);
+              if (existing) continue;
+              
+              // Translate using LLM (non-blocking - continue even if translation fails)
+              let titleJa = '';
+              let abstractJa = '';
+              try {
+                const translation = await translateToJapanese(paper.title, paper.abstract);
+                titleJa = translation.titleJa || '';
+                abstractJa = translation.abstractJa || '';
+              } catch (translationError) {
+                console.warn('[Paper] Translation skipped for arxivId:', paper.arxivId);
+                // Continue without translation
+              }
+              
+              // Add to database
+              const added = await addPaper({
+                ...paper,
+                titleJa,
+                abstractJa,
+              });
+              
+              if (added) totalAdded++;
+            } catch (paperError) {
+              console.error('[Paper] Failed to add paper:', paperError);
+              errors.push(`Failed to add paper: ${paper.arxivId}`);
+            }
+          }
+        } catch (keywordError) {
+          console.error('[Keyword] Failed to fetch papers for keyword:', kw.keyword, keywordError);
+          errors.push(`Failed to fetch papers for keyword: ${kw.keyword}`);
         }
       }
       
-      return { success: true, message: `${totalAdded}件の新しい論文を保存しました`, count: totalAdded };
+      const message = errors.length > 0 
+        ? `${totalAdded}件の新しい論文を保存しました（${errors.length}件のエラー）`
+        : `${totalAdded}件の新しい論文を保存しました`;
+      
+      return { success: true, message, count: totalAdded };
     }),
     
     delete: publicProcedure
@@ -256,10 +339,14 @@ export const appRouter = router({
       
       let translated = 0;
       for (const paper of untranslated) {
-        const { titleJa, abstractJa } = await translateToJapanese(paper.title, paper.abstract);
-        if (titleJa || abstractJa) {
-          await updatePaperTranslation(paper.arxivId, titleJa, abstractJa);
-          translated++;
+        try {
+          const { titleJa, abstractJa } = await translateToJapanese(paper.title, paper.abstract);
+          if (titleJa || abstractJa) {
+            await updatePaperTranslation(paper.arxivId, titleJa, abstractJa);
+            translated++;
+          }
+        } catch (error) {
+          console.error('[Retranslate] Failed for paper:', paper.arxivId, error);
         }
       }
       

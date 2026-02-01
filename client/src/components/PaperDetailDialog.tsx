@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -47,6 +47,10 @@ export function PaperDetailDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden flex flex-col p-0">
+        {/* Hidden title for accessibility */}
+        <DialogTitle className="sr-only">
+          {paper.titleJa || paper.title}
+        </DialogTitle>
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between mb-3">

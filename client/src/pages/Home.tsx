@@ -346,11 +346,11 @@ export default function Home() {
 
       {/* Paper Detail Dialog */}
       <Dialog open={!!selectedPaper} onOpenChange={() => setSelectedPaper(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-6">
           {selectedPaper && (
             <>
-              <DialogHeader>
-                <div className="flex items-center gap-2 mb-2">
+              <DialogHeader className="pb-4 border-b">
+                <div className="flex items-center gap-2 mb-3">
                   <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
                     {selectedPaper.journal || 'arXiv'}
                   </Badge>
@@ -358,50 +358,50 @@ export default function Home() {
                     {formatDate(selectedPaper.publishedAt)}
                   </span>
                 </div>
-                <DialogTitle className="text-xl leading-tight">
+                <DialogTitle className="text-2xl leading-relaxed font-bold text-slate-900 mb-2">
                   {selectedPaper.titleJa || selectedPaper.title}
                 </DialogTitle>
                 {selectedPaper.titleJa && (
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-slate-600 italic mb-3 leading-relaxed">
                     {selectedPaper.title}
                   </p>
                 )}
-                <DialogDescription className="flex items-center gap-1 mt-2">
-                  <Users className="h-4 w-4" />
-                  {selectedPaper.authors}
+                <DialogDescription className="flex items-start gap-2 text-slate-700">
+                  <Users className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span className="leading-relaxed">{selectedPaper.authors}</span>
                 </DialogDescription>
               </DialogHeader>
               
-              <ScrollArea className="flex-1 pr-4">
-                <div className="space-y-4">
+              <ScrollArea className="flex-1 pr-4 my-4">
+                <div className="space-y-6 pr-4">
                   {selectedPaper.abstractJa && (
                     <div>
-                      <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <span className="w-1 h-4 bg-indigo-500 rounded-full"></span>
+                      <h4 className="font-bold text-lg text-slate-900 mb-3 flex items-center gap-2">
+                        <span className="w-1 h-5 bg-indigo-500 rounded-full"></span>
                         要旨（日本語）
                       </h4>
-                      <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">
+                      <p className="text-slate-700 leading-relaxed text-base whitespace-normal">
                         {selectedPaper.abstractJa.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}
                       </p>
                     </div>
                   )}
                   
-                  <Separator />
+                  {selectedPaper.abstractJa && <Separator className="my-4" />}
                   
                   <div>
-                    <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <span className="w-1 h-4 bg-slate-400 rounded-full"></span>
+                    <h4 className="font-bold text-lg text-slate-900 mb-3 flex items-center gap-2">
+                      <span className="w-1 h-5 bg-slate-400 rounded-full"></span>
                       Abstract（原文）
                     </h4>
-                    <p className="text-slate-500 leading-relaxed whitespace-pre-wrap text-sm">
+                    <p className="text-slate-600 leading-relaxed text-sm whitespace-normal">
                       {selectedPaper.abstract.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}
                     </p>
                   </div>
                 </div>
               </ScrollArea>
               
-              <div className="flex items-center justify-between pt-4 border-t mt-4">
-                <div className="flex gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t mt-4">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -423,7 +423,7 @@ export default function Home() {
                     </Button>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {(!selectedPaper.titleJa || !selectedPaper.abstractJa) && (
                     <Button
                       variant="outline"

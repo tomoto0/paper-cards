@@ -3,11 +3,12 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { PaperDetailDialog } from "@/components/PaperDetailDialog";
 import { toast } from "sonner";
 import { 
   Search, 
@@ -345,130 +346,15 @@ export default function Home() {
       </main>
 
       {/* Paper Detail Dialog */}
-      <Dialog open={!!selectedPaper} onOpenChange={() => setSelectedPaper(null)}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-6">
-          {selectedPaper && (
-            <>
-              <DialogHeader className="pb-4 border-b">
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
-                    {selectedPaper.journal || 'arXiv'}
-                  </Badge>
-                  <span className="text-sm text-slate-500">
-                    {formatDate(selectedPaper.publishedAt)}
-                  </span>
-                </div>
-                <DialogTitle className="text-2xl leading-relaxed font-bold text-slate-900 mb-2">
-                  {selectedPaper.titleJa || selectedPaper.title}
-                </DialogTitle>
-                {selectedPaper.titleJa && (
-                  <p className="text-sm text-slate-600 italic mb-3 leading-relaxed">
-                    {selectedPaper.title}
-                  </p>
-                )}
-                <DialogDescription className="flex items-start gap-2 text-slate-700">
-                  <Users className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span className="leading-relaxed">{selectedPaper.authors}</span>
-                </DialogDescription>
-              </DialogHeader>
-              
-              <ScrollArea className="flex-1 pr-4 my-4">
-                <div className="space-y-6 pr-4">
-                  {selectedPaper.abstractJa && (
-                    <div>
-                      <h4 className="font-bold text-lg text-slate-900 mb-3 flex items-center gap-2">
-                        <span className="w-1 h-5 bg-indigo-500 rounded-full"></span>
-                        要旨（日本語）
-                      </h4>
-                      <p className="text-slate-700 leading-relaxed text-base whitespace-normal">
-                        {selectedPaper.abstractJa.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {selectedPaper.abstractJa && <Separator className="my-4" />}
-                  
-                  <div>
-                    <h4 className="font-bold text-lg text-slate-900 mb-3 flex items-center gap-2">
-                      <span className="w-1 h-5 bg-slate-400 rounded-full"></span>
-                      Abstract（原文）
-                    </h4>
-                    <p className="text-slate-600 leading-relaxed text-sm whitespace-normal">
-                      {selectedPaper.abstract.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim()}
-                    </p>
-                  </div>
-                </div>
-              </ScrollArea>
-              
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t mt-4">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(selectedPaper.arxivUrl, '_blank')}
-                    className="gap-2"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    arXivで見る
-                  </Button>
-                  {selectedPaper.pdfUrl && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(selectedPaper.pdfUrl, '_blank')}
-                      className="gap-2"
-                    >
-                      <BookOpen className="h-4 w-4" />
-                      PDF
-                    </Button>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(!selectedPaper.titleJa || !selectedPaper.abstractJa) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => retranslateMutation.mutate({ id: selectedPaper.id })}
-                      disabled={retranslateMutation.isPending}
-                      className="gap-2"
-                    >
-                      {retranslateMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      翻訳
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => shareOnX(selectedPaper)}
-                    className="gap-2"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                    共有
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      deletePaperMutation.mutate({ id: selectedPaper.id });
-                      setSelectedPaper(null);
-                    }}
-                    className="gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    削除
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PaperDetailDialog
+        paper={selectedPaper}
+        open={!!selectedPaper}
+        onOpenChange={(open) => !open && setSelectedPaper(null)}
+        onRetranslate={(id) => retranslateMutation.mutate({ id })}
+        onDelete={(id) => deletePaperMutation.mutate({ id })}
+        onShare={shareOnX}
+        isRetranslating={retranslateMutation.isPending}
+      />
     </div>
   );
 }

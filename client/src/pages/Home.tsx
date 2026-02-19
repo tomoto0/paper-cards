@@ -353,6 +353,7 @@ export default function Home() {
         onRetranslate={(id) => retranslateMutation.mutate({ id })}
         onDelete={(id) => deletePaperMutation.mutate({ id })}
         onShare={shareOnX}
+        onSelectPaper={(paper) => setSelectedPaper(paper)}
         isRetranslating={retranslateMutation.isPending}
       />
     </div>

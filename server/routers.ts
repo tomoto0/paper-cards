@@ -14,7 +14,8 @@ import {
   getActiveKeywords,
   getPaperByArxivId,
   getPaperById,
-  updatePaperTranslation
+  updatePaperTranslation,
+  findRelatedPapers
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 
@@ -249,6 +250,12 @@ export const appRouter = router({
       .input(z.object({ sortBy: z.enum(['createdAt', 'publishedAt', 'journal']).optional() }).optional())
       .query(async ({ input }) => {
         return await getAllPapers(input?.sortBy || 'createdAt');
+      }),
+    
+    related: publicProcedure
+      .input(z.object({ paperId: z.number(), limit: z.number().optional() }))
+      .query(async ({ input }) => {
+        return await findRelatedPapers(input.paperId, input.limit || 5);
       }),
     
     fetch: publicProcedure.mutation(async () => {

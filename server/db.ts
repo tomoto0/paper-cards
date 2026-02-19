@@ -227,3 +227,63 @@ export async function deletePaper(id: number): Promise<boolean> {
     return false;
   }
 }
+
+// Find related papers based on keywords and title similarity
+export async function findRelatedPapers(paperId: number, limit: number = 5): Promise<Paper[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    // Get the current paper
+    const currentPaper = await getPaperById(paperId);
+    if (!currentPaper) return [];
+    
+    // Extract keywords from title and abstract
+    const titleWords = (currentPaper.titleJa || currentPaper.title)
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(word => word.length > 3); // Only words longer than 3 chars
+    
+    // Get all papers
+    const allPapers = await getAllPapers();
+    
+    // Score papers based on keyword matches
+    const scoredPapers = allPapers
+      .filter(p => p.id !== paperId) // Exclude current paper
+      .map(paper => {
+        let score = 0;
+        
+        // Check keyword match
+        if (currentPaper.keyword && paper.keyword === currentPaper.keyword) {
+          score += 10;
+        }
+        
+        // Check title word matches
+        const paperTitleWords = (paper.titleJa || paper.title)
+          .toLowerCase()
+          .split(/\s+/);
+        titleWords.forEach(word => {
+          if (paperTitleWords.some(tw => tw.includes(word) || word.includes(tw))) {
+            score += 2;
+          }
+        });
+        
+        // Check author matches
+        const currentAuthors = currentPaper.authors.split(',').map(a => a.trim().toLowerCase());
+        const paperAuthors = paper.authors.split(',').map(a => a.trim().toLowerCase());
+        const commonAuthors = currentAuthors.filter(a => paperAuthors.some(pa => pa.includes(a)));
+        score += commonAuthors.length * 5;
+        
+        return { paper, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(item => item.paper);
+    
+    return scoredPapers;
+  } catch (error) {
+    console.error("[Database] Failed to find related papers:", error);
+    return [];
+  }
+}

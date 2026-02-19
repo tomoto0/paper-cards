@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
 import {
   ExternalLink,
   BookOpen,
@@ -11,7 +12,10 @@ import {
   RefreshCw,
   Trash2,
   Loader2,
+  Link2,
 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { trpc } from "@/lib/trpc";
 
 interface PaperDetailDialogProps {
   paper: any | null;
@@ -20,6 +24,7 @@ interface PaperDetailDialogProps {
   onRetranslate: (id: number) => void;
   onDelete: (id: number) => void;
   onShare: (paper: any) => void;
+  onSelectPaper: (paper: any) => void;
   isRetranslating: boolean;
 }
 
@@ -30,9 +35,25 @@ export function PaperDetailDialog({
   onRetranslate,
   onDelete,
   onShare,
+  onSelectPaper,
   isRetranslating,
 }: PaperDetailDialogProps) {
+  const [relatedPapers, setRelatedPapers] = useState<any[]>([]);
+
   if (!paper) return null;
+
+  // Fetch related papers when dialog opens
+  const { data: fetchedRelatedPapers = [], isLoading: isLoadingRelated } = 
+    trpc.papers.related.useQuery(
+      { paperId: paper?.id || 0, limit: 5 },
+      { enabled: open && !!paper?.id }
+    );
+
+  useEffect(() => {
+    if (fetchedRelatedPapers) {
+      setRelatedPapers(fetchedRelatedPapers);
+    }
+  }, [fetchedRelatedPapers]);
 
   const formatDate = (timestamp: number) => {
     if (!timestamp) return "Unknown";
@@ -133,6 +154,50 @@ export function PaperDetailDialog({
                   {paper.abstract.replace(/\n/g, " ").replace(/\s+/g, " ").trim()}
                 </p>
               </section>
+            )}
+
+            {/* Related Papers Section */}
+            {relatedPapers.length > 0 && (
+              <>
+                <Separator className="my-6" />
+                <section>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-6 bg-emerald-600 rounded-full"></div>
+                    <h3 className="text-lg font-bold text-slate-900">
+                      関連論文
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
+                    {relatedPapers.map((relatedPaper) => (
+                      <Card
+                        key={relatedPaper.id}
+                        className="p-4 hover:bg-slate-50 cursor-pointer transition-colors border-slate-200"
+                        onClick={() => {
+                          onSelectPaper(relatedPaper);
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Link2 className="h-4 w-4 text-emerald-600 mt-1 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm text-slate-900 leading-tight mb-1">
+                              {relatedPaper.titleJa || relatedPaper.title}
+                            </h4>
+                            <p className="text-xs text-slate-600 line-clamp-2">
+                              {relatedPaper.authors.split(",").slice(0, 2).join(", ")}
+                            </p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
+
+            {isLoadingRelated && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-indigo-600" />
+              </div>
             )}
           </div>
         </ScrollArea>

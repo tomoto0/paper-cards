@@ -231,12 +231,23 @@ export async function deletePaper(id: number): Promise<boolean> {
 // Find related papers based on keywords and title similarity
 export async function findRelatedPapers(paperId: number, limit: number = 5): Promise<Paper[]> {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) {
+    console.warn('[Database] Cannot find related papers: database not available');
+    return [];
+  }
+  
+  if (!paperId || paperId <= 0) {
+    console.warn('[Database] Invalid paperId for finding related papers:', paperId);
+    return [];
+  }
   
   try {
     // Get the current paper
     const currentPaper = await getPaperById(paperId);
-    if (!currentPaper) return [];
+    if (!currentPaper) {
+      console.warn('[Database] Paper not found:', paperId);
+      return [];
+    }
     
     // Extract keywords from title and abstract
     const titleWords = (currentPaper.titleJa || currentPaper.title)

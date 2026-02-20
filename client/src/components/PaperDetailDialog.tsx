@@ -43,10 +43,14 @@ export function PaperDetailDialog({
   if (!paper) return null;
 
   // Fetch related papers when dialog opens
-  const { data: fetchedRelatedPapers = [], isLoading: isLoadingRelated } = 
+  const { data: fetchedRelatedPapers = [], isLoading: isLoadingRelated, error: relatedError } = 
     trpc.papers.related.useQuery(
       { paperId: paper?.id || 0, limit: 5 },
-      { enabled: open && !!paper?.id }
+      { 
+        enabled: open && !!paper?.id && paper.id > 0,
+        retry: 1,
+        staleTime: 60000 // 1 minute
+      }
     );
 
   useEffect(() => {

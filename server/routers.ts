@@ -255,7 +255,15 @@ export const appRouter = router({
     related: publicProcedure
       .input(z.object({ paperId: z.number(), limit: z.number().optional() }))
       .query(async ({ input }) => {
-        return await findRelatedPapers(input.paperId, input.limit || 5);
+        if (!input.paperId || input.paperId <= 0) {
+          return [];
+        }
+        try {
+          return await findRelatedPapers(input.paperId, input.limit || 5);
+        } catch (error) {
+          console.error('[tRPC] Error fetching related papers:', error);
+          return [];
+        }
       }),
     
     fetch: publicProcedure.mutation(async () => {

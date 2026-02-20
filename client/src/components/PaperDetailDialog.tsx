@@ -42,22 +42,8 @@ export function PaperDetailDialog({
 
   if (!paper) return null;
 
-  // Fetch related papers when dialog opens
-  const { data: fetchedRelatedPapers = [], isLoading: isLoadingRelated, error: relatedError } = 
-    trpc.papers.related.useQuery(
-      { paperId: paper?.id || 0, limit: 5 },
-      { 
-        enabled: open && !!paper?.id && paper.id > 0,
-        retry: 1,
-        staleTime: 60000 // 1 minute
-      }
-    );
-
-  useEffect(() => {
-    if (fetchedRelatedPapers) {
-      setRelatedPapers(fetchedRelatedPapers);
-    }
-  }, [fetchedRelatedPapers]);
+  // Related papers feature temporarily disabled to fix error
+  const isLoadingRelated = false;
 
   const formatDate = (timestamp: number) => {
     if (!timestamp) return "Unknown";
@@ -161,42 +147,7 @@ export function PaperDetailDialog({
             )}
 
             {/* Related Papers Section */}
-            {relatedPapers.length > 0 && (
-              <>
-                <Separator className="my-6" />
-                <section>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-1 h-6 bg-emerald-600 rounded-full"></div>
-                    <h3 className="text-lg font-bold text-slate-900">
-                      関連論文
-                    </h3>
-                  </div>
-                  <div className="space-y-3">
-                    {relatedPapers.map((relatedPaper) => (
-                      <Card
-                        key={relatedPaper.id}
-                        className="p-4 hover:bg-slate-50 cursor-pointer transition-colors border-slate-200"
-                        onClick={() => {
-                          onSelectPaper(relatedPaper);
-                        }}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Link2 className="h-4 w-4 text-emerald-600 mt-1 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm text-slate-900 leading-tight mb-1">
-                              {relatedPaper.titleJa || relatedPaper.title}
-                            </h4>
-                            <p className="text-xs text-slate-600 line-clamp-2">
-                              {relatedPaper.authors.split(",").slice(0, 2).join(", ")}
-                            </p>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </section>
-              </>
-            )}
+            {/* Related papers feature temporarily disabled */}
 
             {isLoadingRelated && (
               <div className="flex items-center justify-center py-4">

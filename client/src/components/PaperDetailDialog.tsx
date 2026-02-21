@@ -13,6 +13,8 @@ import {
   Trash2,
   Loader2,
   Link2,
+  Share2,
+  Check,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
@@ -221,13 +223,9 @@ export function PaperDetailDialog({
                 className="gap-2"
               >
                 {copied ? (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-                  </svg>
+                  <Check className="h-4 w-4" />
                 ) : (
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
+                  <Share2 className="h-4 w-4" />
                 )}
                 {copied ? "コピーしました" : "共有"}
               </Button>

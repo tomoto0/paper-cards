@@ -111,8 +111,8 @@ export function PaperDetailDialog({
         </div>
 
         {/* Content Area with Scroll */}
-        <ScrollArea className="flex-1 w-full h-full">
-          <div className="px-6 py-6 space-y-6 pr-4">
+        <ScrollArea className="flex-1 w-full h-full overflow-hidden">
+          <div className="w-full px-6 py-6 space-y-6">
             {/* Japanese Abstract */}
             {paper.abstractJa && (
               <section>

@@ -39,11 +39,23 @@ export function PaperDetailDialog({
   isRetranslating,
 }: PaperDetailDialogProps) {
   const [relatedPapers, setRelatedPapers] = useState<any[]>([]);
+  const [copied, setCopied] = useState(false);
 
   if (!paper) return null;
 
   // Related papers feature temporarily disabled to fix error
   const isLoadingRelated = false;
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(paper.arxivUrl);
+      setCopied(true);
+      // Show visual feedback
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+    }
+  };
 
   const formatDate = (timestamp: number) => {
     if (!timestamp) return "Unknown";
@@ -205,13 +217,19 @@ export function PaperDetailDialog({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onShare(paper)}
+                onClick={handleCopyUrl}
                 className="gap-2"
               >
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-                共有
+                {copied ? (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+                  </svg>
+                ) : (
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                )}
+                {copied ? "コピーしました" : "共有"}
               </Button>
               <Button
                 variant="destructive"

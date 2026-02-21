@@ -57,7 +57,7 @@ export function PaperDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[95vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="max-w-5xl max-h-[95vh] flex flex-col p-0 gap-0">
         {/* Hidden title for accessibility */}
         <DialogTitle className="sr-only">
           {paper.titleJa || paper.title}
@@ -111,8 +111,8 @@ export function PaperDetailDialog({
         </div>
 
         {/* Content Area with Scroll */}
-        <ScrollArea className="flex-1 w-full h-full overflow-hidden">
-          <div className="w-full px-6 py-6 space-y-6">
+        <ScrollArea className="flex-1 w-full">
+          <div className="w-full px-6 py-6 space-y-6 pr-6">
             {/* Japanese Abstract */}
             {paper.abstractJa && (
               <section>

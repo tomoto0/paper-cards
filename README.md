@@ -2,7 +2,7 @@
 
 > **Automated Academic Paper Collection, Translation, and Management System**
 
-![Paper Catcher](./client/public/og-image.png)
+![Paper Catcher](og-image_1.png)
 
 Paper Catcher is a full-stack web application that automatically collects academic papers from arXiv, translates them into Japanese using AI, and provides an intuitive interface for researchers and academics to discover and manage the latest research in their fields of interest.
 

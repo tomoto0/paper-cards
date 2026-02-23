@@ -249,9 +249,11 @@ export const appRouter = router({
 
   papers: router({
     list: publicProcedure
-      .input(z.object({ sortBy: z.enum(['createdAt', 'publishedAt', 'journal']).optional() }).optional())
+      .input(z.object({ sortBy: z.enum(['createdAt', 'publishedAt', 'journal', 'relevance', 'citations']).optional() }).optional())
       .query(async ({ input }) => {
-        return await getAllPapers(input?.sortBy || 'createdAt');
+        const sortBy = input?.sortBy || 'createdAt';
+        const baseSortBy = (sortBy === 'relevance' || sortBy === 'citations') ? 'createdAt' : sortBy;
+        return await getAllPapers(baseSortBy as 'createdAt' | 'publishedAt' | 'journal');
       }),
     
     related: publicProcedure
@@ -275,7 +277,7 @@ export const appRouter = router({
         startDate: z.number().optional(),
         endDate: z.number().optional(),
         category: z.string().optional(),
-        sortBy: z.enum(['createdAt', 'publishedAt', 'journal']).optional()
+        sortBy: z.enum(['createdAt', 'publishedAt', 'journal', 'relevance', 'citations']).optional()
       }))
       .query(async ({ input }) => {
         try {

@@ -14,7 +14,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, ArrowUpDown } from "lucide-react";
+
+type SortOption = 'relevance' | 'date' | 'citations';
 
 interface SearchFilterBarProps {
   onSearch: (query: string) => void;
@@ -24,15 +26,19 @@ interface SearchFilterBarProps {
     endDate?: number;
     category?: string;
   }) => void;
+  onSort: (sortBy: 'createdAt' | 'publishedAt' | 'journal' | 'relevance' | 'citations') => void;
   categories: string[];
   isLoading?: boolean;
+  currentSort?: SortOption;
 }
 
 export function SearchFilterBar({
   onSearch,
   onFilter,
+  onSort,
   categories,
   isLoading = false,
+  currentSort = 'relevance',
 }: SearchFilterBarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [author, setAuthor] = useState("");
@@ -40,6 +46,7 @@ export function SearchFilterBar({
   const [endDate, setEndDate] = useState("");
   const [category, setCategory] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>(currentSort);
 
   const handleSearch = useCallback(() => {
     onSearch(searchQuery);
@@ -63,8 +70,24 @@ export function SearchFilterBar({
     onFilter({});
   }, [onFilter]);
 
+  const handleSortChange = useCallback((newSort: SortOption) => {
+    setSortBy(newSort);
+    const sortMap: Record<SortOption, 'createdAt' | 'publishedAt' | 'journal' | 'relevance' | 'citations'> = {
+      relevance: 'relevance',
+      date: 'publishedAt',
+      citations: 'citations',
+    };
+    onSort(sortMap[newSort]);
+  }, [onSort]);
+
   const hasActiveFilters =
     author || startDate || endDate || category;
+
+  const sortLabels: Record<SortOption, string> = {
+    relevance: '関連性',
+    date: '日付',
+    citations: '引用数',
+  };
 
   return (
     <div className="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200">
@@ -239,6 +262,28 @@ export function SearchFilterBar({
           )}
         </div>
       )}
+
+      {/* Sort Options */}
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-slate-600 flex items-center gap-1">
+          <ArrowUpDown className="h-4 w-4" />
+          ソート:
+        </span>
+        <div className="flex gap-1">
+          {(Object.keys(sortLabels) as SortOption[]).map((sort) => (
+            <Button
+              key={sort}
+              variant={sortBy === sort ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleSortChange(sort)}
+              disabled={isLoading}
+              className={`text-xs ${sortBy === sort ? "bg-indigo-600 text-white" : ""}`}
+            >
+              {sortLabels[sort]}
+            </Button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

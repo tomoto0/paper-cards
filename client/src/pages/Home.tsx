@@ -26,7 +26,7 @@ import {
   Loader2
 } from "lucide-react";
 
-type SortBy = 'createdAt' | 'publishedAt' | 'journal';
+type SortBy = 'createdAt' | 'publishedAt' | 'journal' | 'relevance' | 'citations';
 
 export default function Home() {
   const [newKeyword, setNewKeyword] = useState("");
@@ -35,6 +35,7 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<any>({});
+  const [currentSort, setCurrentSort] = useState<'relevance' | 'date' | 'citations'>('relevance');
   
   const utils = trpc.useUtils();
   
@@ -151,7 +152,9 @@ export default function Home() {
   const sortLabels: Record<SortBy, string> = {
     createdAt: '登録順',
     publishedAt: '発行日順',
-    journal: 'ジャーナル順'
+    journal: 'ジャーナル順',
+    relevance: '関連性',
+    citations: '引用数'
   };
 
   return (
@@ -308,8 +311,18 @@ export default function Home() {
         <SearchFilterBar
           onSearch={setSearchQuery}
           onFilter={setFilters}
+          onSort={(newSort) => {
+            setSortBy(newSort);
+            const sortMap: Record<string, 'relevance' | 'date' | 'citations'> = {
+              'relevance': 'relevance',
+              'publishedAt': 'date',
+              'citations': 'citations',
+            };
+            setCurrentSort(sortMap[newSort] || 'relevance');
+          }}
           categories={categories}
           isLoading={searchLoading}
+          currentSort={currentSort}
         />
 
         {/* Papers Count and Sort */}

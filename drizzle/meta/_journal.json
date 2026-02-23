@@ -15,6 +15,13 @@
       "when": 1768928637027,
       "tag": "0001_daffy_amphibian",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1771880768936,
+      "tag": "0002_friendly_lady_ursula",
+      "breakpoints": true
     }
   ]
 }

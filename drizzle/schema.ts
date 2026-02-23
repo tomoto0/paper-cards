@@ -48,6 +48,7 @@ export const papers = mysqlTable("papers", {
   arxivUrl: varchar("arxivUrl", { length: 512 }).notNull(),
   pdfUrl: varchar("pdfUrl", { length: 512 }),
   keyword: varchar("keyword", { length: 255 }),
+  citationCount: int("citationCount").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

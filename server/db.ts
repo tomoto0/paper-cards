@@ -228,6 +228,34 @@ export async function deletePaper(id: number): Promise<boolean> {
   }
 }
 
+// Calculate relevance score for search results
+function calculateRelevanceScore(paper: Paper, query: string): number {
+  if (!query) return 0;
+  
+  const queryLower = query.toLowerCase();
+  let score = 0;
+  
+  // Title match (highest weight)
+  const titleJa = (paper.titleJa || '').toLowerCase();
+  const titleEn = paper.title.toLowerCase();
+  if (titleJa.includes(queryLower)) score += 100;
+  if (titleEn.includes(queryLower)) score += 100;
+  
+  // Abstract match (medium weight)
+  const abstractJa = (paper.abstractJa || '').toLowerCase();
+  const abstractEn = paper.abstract.toLowerCase();
+  const titleMatches = (titleJa.match(new RegExp(queryLower, 'g')) || []).length;
+  const abstractMatches = (abstractJa.match(new RegExp(queryLower, 'g')) || []).length +
+                          (abstractEn.match(new RegExp(queryLower, 'g')) || []).length;
+  score += titleMatches * 50;
+  score += abstractMatches * 10;
+  
+  // Author match (low weight)
+  if (paper.authors.toLowerCase().includes(queryLower)) score += 30;
+  
+  return score;
+}
+
 // Search and filter papers
 export async function searchPapers(
   query?: string,
@@ -237,13 +265,15 @@ export async function searchPapers(
     endDate?: number; // Unix timestamp
     category?: string;
   },
-  sortBy: 'createdAt' | 'publishedAt' | 'journal' = 'createdAt'
+  sortBy: 'createdAt' | 'publishedAt' | 'journal' | 'relevance' | 'citations' = 'createdAt'
 ): Promise<Paper[]> {
   const db = await getDb();
   if (!db) return [];
   
   try {
-    let allPapers = await getAllPapers(sortBy);
+    // For relevance and citations sorting, we'll sort manually
+    const initialSortBy = (sortBy === 'relevance' || sortBy === 'citations') ? 'createdAt' : sortBy;
+    let allPapers = await getAllPapers(initialSortBy as 'createdAt' | 'publishedAt' | 'journal');
     
     // Filter by search query (title, abstract, authors)
     if (query && query.trim()) {
@@ -277,6 +307,28 @@ export async function searchPapers(
       allPapers = allPapers.filter(paper => 
         (paper.journal || '').toLowerCase() === filters.category!.toLowerCase()
       );
+    }
+    
+    // Sort results (manual sorting for relevance and citations)
+    if (sortBy === 'relevance' && query) {
+      // Sort by relevance score
+      allPapers.sort((a, b) => {
+        const scoreA = calculateRelevanceScore(a, query);
+        const scoreB = calculateRelevanceScore(b, query);
+        return scoreB - scoreA; // Descending order
+      });
+    } else if (sortBy === 'citations') {
+      // Sort by citation count (descending)
+      allPapers.sort((a, b) => (b.citationCount || 0) - (a.citationCount || 0));
+    } else if (sortBy === 'publishedAt') {
+      // Sort by published date (descending)
+      allPapers.sort((a, b) => (b.publishedAt || 0) - (a.publishedAt || 0));
+    } else if (sortBy === 'journal') {
+      // Sort by journal (ascending)
+      allPapers.sort((a, b) => (a.journal || '').localeCompare(b.journal || ''));
+    } else {
+      // Sort by creation date (descending)
+      allPapers.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
     }
     
     return allPapers;

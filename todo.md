@@ -37,3 +37,11 @@
 - [x] Frontend: Integrate search/filter UI into Home page
 - [x] Tests: Write tests for search and filtering functionality (19/19 tests passed)
 - [x] UI: Ensure responsive design for search/filter UI
+
+
+## Advanced Sort Features
+- [x] Backend: Add relevance score calculation to search results
+- [x] Backend: Add citation count field to papers table
+- [x] Frontend: Add sort buttons (relevance, date, citations) to SearchFilterBar
+- [x] Frontend: Integrate sort functionality with search results
+- [x] Tests: Write tests for sort functionality (26/26 tests passed)

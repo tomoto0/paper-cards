@@ -1,0 +1,1 @@
+ALTER TABLE `papers` ADD `citationCount` int DEFAULT 0 NOT NULL;

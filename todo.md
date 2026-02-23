@@ -28,3 +28,12 @@
 - [x] Add H2 headings to main page
 - [x] Optimize title length (30-60 characters)
 - [x] Optimize description length (50-160 characters)
+
+
+## Search & Filtering Features
+- [x] Backend: Implement papers.search procedure with keyword, author, date range, category filters
+- [x] Frontend: Create SearchBar component with text input
+- [x] Frontend: Create FilterPanel component with date range picker and category selector
+- [x] Frontend: Integrate search/filter UI into Home page
+- [x] Tests: Write tests for search and filtering functionality (19/19 tests passed)
+- [x] UI: Ensure responsive design for search/filter UI

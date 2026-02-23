@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PaperDetailDialog } from "@/components/PaperDetailDialog";
+import { SearchFilterBar } from "@/components/SearchFilterBar";
 import { toast } from "sonner";
 import { 
   Search, 
@@ -32,11 +33,21 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<SortBy>('createdAt');
   const [selectedPaper, setSelectedPaper] = useState<any>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<any>({});
   
   const utils = trpc.useUtils();
   
   const { data: keywords = [], isLoading: keywordsLoading } = trpc.keywords.list.useQuery();
   const { data: papers = [], isLoading: papersLoading } = trpc.papers.list.useQuery({ sortBy });
+  const { data: categories = [], isLoading: categoriesLoading } = trpc.papers.categories.useQuery();
+  const { data: searchResults = [], isLoading: searchLoading } = trpc.papers.search.useQuery(
+    { query: searchQuery, ...filters, sortBy },
+    { enabled: !!searchQuery || Object.keys(filters).length > 0 }
+  );
+  
+  const displayedPapers = (searchQuery || Object.keys(filters).length > 0) ? searchResults : papers;
+  const isSearching = searchQuery || Object.keys(filters).length > 0;
   
   const addKeywordMutation = trpc.keywords.add.useMutation({
     onSuccess: (data) => {
@@ -198,151 +209,238 @@ export default function Home() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Search className="h-5 w-5 text-indigo-500" />
-                  キーワード設定
+                  <Settings className="h-5 w-5" />
+                  キーワード管理
                 </CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => setShowSettings(false)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSettings(false)}
+                  className="h-6 w-6 p-0"
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              <CardDescription>
-                論文検索に使用するキーワードを管理します
-              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex gap-2 mb-4">
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
                 <Input
                   placeholder="新しいキーワードを入力..."
                   value={newKeyword}
                   onChange={(e) => setNewKeyword(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
-                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleAddKeyword();
+                    }
+                  }}
+                  disabled={addKeywordMutation.isPending}
                 />
-                <Button 
+                <Button
                   onClick={handleAddKeyword}
-                  disabled={addKeywordMutation.isPending || !newKeyword.trim()}
+                  disabled={addKeywordMutation.isPending}
                   className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
                   追加
                 </Button>
               </div>
-              
-              {keywordsLoading ? (
-                <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
-                </div>
-              ) : keywords.length === 0 ? (
-                <p className="text-center text-slate-500 py-4">
-                  キーワードがありません。上のフォームから追加してください。
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {keywords.map((kw) => (
-                    <div
-                      key={kw.id}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${
-                        kw.isActive 
-                          ? 'bg-indigo-50 border-indigo-200' 
-                          : 'bg-slate-50 border-slate-200 opacity-60'
-                      }`}
-                    >
-                      <Switch
-                        checked={kw.isActive}
-                        onCheckedChange={() => toggleKeywordMutation.mutate({ id: kw.id })}
-                        className="data-[state=checked]:bg-indigo-500"
-                      />
-                      <span className={kw.isActive ? 'text-slate-700' : 'text-slate-400'}>
-                        {kw.keyword}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteKeywordMutation.mutate({ id: kw.id })}
-                        className="h-6 w-6 p-0 text-slate-400 hover:text-red-500"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+
+              {keywords.length > 0 && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-slate-700">登録済みキーワード:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {keywords.map((kw) => (
+                        <div
+                          key={kw.id}
+                          className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
+                        >
+                          <Switch
+                            checked={kw.isActive}
+                            onCheckedChange={() =>
+                              toggleKeywordMutation.mutate({ id: kw.id })
+                            }
+                            disabled={toggleKeywordMutation.isPending}
+                          />
+                          <span className={`text-sm ${!kw.isActive ? "text-slate-400 line-through" : "text-slate-700"}`}>
+                            {kw.keyword}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              deleteKeywordMutation.mutate({ id: kw.id })
+                            }
+                            disabled={deleteKeywordMutation.isPending}
+                            className="h-6 w-6 p-0 text-slate-400 hover:text-red-500"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                </>
               )}
+
+              <Separator />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => retranslateAllMutation.mutate()}
+                  disabled={retranslateAllMutation.isPending}
+                  className="flex-1 gap-2"
+                >
+                  {retranslateAllMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  全て再翻訳
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Sort Controls */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <ArrowUpDown className="h-4 w-4 text-slate-400" />
-            <span className="text-sm text-slate-500">並び替え:</span>
-            {(['createdAt', 'publishedAt', 'journal'] as SortBy[]).map((sort) => (
-              <Button
-                key={sort}
-                variant={sortBy === sort ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSortBy(sort)}
-                className={sortBy === sort ? "bg-indigo-500 hover:bg-indigo-600" : ""}
-              >
-                {sortLabels[sort]}
-              </Button>
-            ))}
+        {/* Search & Filter Bar */}
+        <SearchFilterBar
+          onSearch={setSearchQuery}
+          onFilter={setFilters}
+          categories={categories}
+          isLoading={searchLoading}
+        />
+
+        {/* Papers Count and Sort */}
+        <div className="flex items-center justify-between my-6">
+          <div className="text-sm text-slate-600">
+            {isSearching ? (
+              <>
+                検索結果: <span className="font-semibold text-slate-900">{displayedPapers.length}</span>件
+              </>
+            ) : (
+              <>
+                保存済み論文: <span className="font-semibold text-slate-900">{papers.length}</span>件
+              </>
+            )}
           </div>
-          <p className="text-sm text-slate-500">
-            {papers.length}件の論文
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-600">ソート:</span>
+            <div className="flex gap-1">
+              {(Object.keys(sortLabels) as SortBy[]).map((sort) => (
+                <Button
+                  key={sort}
+                  variant={sortBy === sort ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSortBy(sort)}
+                  className={`gap-1 ${sortBy === sort ? "bg-indigo-600 text-white" : ""}`}
+                >
+                  <ArrowUpDown className="h-3 w-3" />
+                  {sortLabels[sort]}
+                </Button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Papers Grid */}
-        {papersLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-          </div>
-        ) : papers.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <BookOpen className="h-12 w-12 text-slate-300 mb-4" />
-              <p className="text-slate-500 text-center">
-                論文がありません。<br />
-                キーワードを設定して「論文を取得」ボタンをクリックしてください。
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {papers.map((paper) => (
-              <Card 
-                key={paper.id} 
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-slate-200 hover:border-indigo-300"
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+          {(searchLoading || papersLoading) && displayedPapers.length === 0 ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto mb-2" />
+                <p className="text-slate-600">読み込み中...</p>
+              </div>
+            </div>
+          ) : displayedPapers.length === 0 ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <div className="text-center">
+                <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600">
+                  {isSearching ? "検索結果がありません" : "論文がまだ保存されていません"}
+                </p>
+                <p className="text-sm text-slate-500 mt-1">
+                  {isSearching ? "別の検索条件をお試しください" : "「論文を取得」ボタンをクリックして論文を取得してください"}
+                </p>
+              </div>
+            </div>
+          ) : (
+            displayedPapers.map((paper: any) => (
+              <Card
+                key={paper.id}
+                className="hover:shadow-lg transition-shadow cursor-pointer group"
                 onClick={() => setSelectedPaper(paper)}
               >
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
-                    <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 text-xs">
-                      {paper.journal || 'arXiv'}
+                    <Badge className="bg-indigo-600 text-white flex-shrink-0">
+                      {paper.journal || "arXiv"}
                     </Badge>
-                    <div className="flex items-center gap-1 text-xs text-slate-400">
-                      <Calendar className="h-3 w-3" />
+                    <span className="text-xs text-slate-500 flex-shrink-0">
                       {formatDate(paper.publishedAt)}
-                    </div>
+                    </span>
                   </div>
-                  <CardTitle className="text-base leading-tight line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                  <CardTitle className="text-base leading-tight mt-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
                     {paper.titleJa || paper.title}
                   </CardTitle>
+                  {paper.titleJa && paper.title && (
+                    <CardDescription className="text-xs italic line-clamp-1">
+                      {paper.title}
+                    </CardDescription>
+                  )}
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
-                    <Users className="h-3 w-3" />
-                    <span className="line-clamp-1">{paper.authors}</span>
+                <CardContent className="space-y-3">
+                  <div className="flex items-start gap-2 text-sm">
+                    <Users className="h-4 w-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-slate-600 line-clamp-1">{paper.authors}</p>
                   </div>
                   <p className="text-sm text-slate-600 line-clamp-3">
                     {getAbstractPreview(paper)}
                   </p>
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(paper.arxivUrl, "_blank");
+                      }}
+                      className="flex-1 gap-1 text-xs"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      arXiv
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        shareOnX(paper);
+                      }}
+                      className="flex-1 gap-1 text-xs"
+                    >
+                      <Search className="h-3 w-3" />
+                      X
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deletePaperMutation.mutate({ id: paper.id });
+                      }}
+                      disabled={deletePaperMutation.isPending}
+                      className="flex-1 gap-1 text-xs text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </main>
 
       {/* Paper Detail Dialog */}
@@ -352,8 +450,8 @@ export default function Home() {
         onOpenChange={(open) => !open && setSelectedPaper(null)}
         onRetranslate={(id) => retranslateMutation.mutate({ id })}
         onDelete={(id) => deletePaperMutation.mutate({ id })}
-        onShare={shareOnX}
-        onSelectPaper={(paper) => setSelectedPaper(paper)}
+        onShare={() => {}}
+        onSelectPaper={setSelectedPaper}
         isRetranslating={retranslateMutation.isPending}
       />
     </div>

@@ -15,7 +15,9 @@ import {
   getPaperByArxivId,
   getPaperById,
   updatePaperTranslation,
-  findRelatedPapers
+  findRelatedPapers,
+  searchPapers,
+  getCategories
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 
@@ -265,6 +267,42 @@ export const appRouter = router({
           return [];
         }
       }),
+    
+    search: publicProcedure
+      .input(z.object({
+        query: z.string().optional(),
+        author: z.string().optional(),
+        startDate: z.number().optional(),
+        endDate: z.number().optional(),
+        category: z.string().optional(),
+        sortBy: z.enum(['createdAt', 'publishedAt', 'journal']).optional()
+      }))
+      .query(async ({ input }) => {
+        try {
+          return await searchPapers(
+            input.query,
+            {
+              author: input.author,
+              startDate: input.startDate,
+              endDate: input.endDate,
+              category: input.category
+            },
+            input.sortBy || 'createdAt'
+          );
+        } catch (error) {
+          console.error('[tRPC] Error searching papers:', error);
+          return [];
+        }
+      }),
+    
+    categories: publicProcedure.query(async () => {
+      try {
+        return await getCategories();
+      } catch (error) {
+        console.error('[tRPC] Error fetching categories:', error);
+        return [];
+      }
+    }),
     
     fetch: publicProcedure.mutation(async () => {
       const activeKeywords = await getActiveKeywords();

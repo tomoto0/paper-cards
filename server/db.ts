@@ -228,6 +228,79 @@ export async function deletePaper(id: number): Promise<boolean> {
   }
 }
 
+// Search and filter papers
+export async function searchPapers(
+  query?: string,
+  filters?: {
+    author?: string;
+    startDate?: number; // Unix timestamp
+    endDate?: number; // Unix timestamp
+    category?: string;
+  },
+  sortBy: 'createdAt' | 'publishedAt' | 'journal' = 'createdAt'
+): Promise<Paper[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    let allPapers = await getAllPapers(sortBy);
+    
+    // Filter by search query (title, abstract, authors)
+    if (query && query.trim()) {
+      const searchLower = query.toLowerCase();
+      allPapers = allPapers.filter(paper => {
+        const titleMatch = (paper.titleJa || paper.title).toLowerCase().includes(searchLower);
+        const abstractMatch = (paper.abstractJa || paper.abstract).toLowerCase().includes(searchLower);
+        const authorsMatch = paper.authors.toLowerCase().includes(searchLower);
+        return titleMatch || abstractMatch || authorsMatch;
+      });
+    }
+    
+    // Filter by author
+    if (filters?.author && filters.author.trim()) {
+      const authorLower = filters.author.toLowerCase();
+      allPapers = allPapers.filter(paper => 
+        paper.authors.toLowerCase().includes(authorLower)
+      );
+    }
+    
+    // Filter by date range
+    if (filters?.startDate) {
+      allPapers = allPapers.filter(paper => (paper.publishedAt || 0) >= filters.startDate!);
+    }
+    if (filters?.endDate) {
+      allPapers = allPapers.filter(paper => (paper.publishedAt || 0) <= filters.endDate!);
+    }
+    
+    // Filter by category
+    if (filters?.category && filters.category.trim()) {
+      allPapers = allPapers.filter(paper => 
+        (paper.journal || '').toLowerCase() === filters.category!.toLowerCase()
+      );
+    }
+    
+    return allPapers;
+  } catch (error) {
+    console.error('[Database] Failed to search papers:', error);
+    return [];
+  }
+}
+
+// Get unique categories from all papers
+export async function getCategories(): Promise<string[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    const allPapers = await getAllPapers();
+    const categories = Array.from(new Set(allPapers.map(p => p.journal || '').filter(c => c)));
+    return categories.sort();
+  } catch (error) {
+    console.error('[Database] Failed to get categories:', error);
+    return [];
+  }
+}
+
 // Find related papers based on keywords and title similarity
 export async function findRelatedPapers(paperId: number, limit: number = 5): Promise<Paper[]> {
   const db = await getDb();

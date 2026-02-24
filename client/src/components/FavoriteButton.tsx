@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
@@ -53,14 +53,14 @@ export function FavoriteButton({ paperId, onToggle }: FavoriteButtonProps) {
     },
   });
 
-  const handleToggle = async () => {
+  const handleToggle = useCallback(async () => {
     setIsLoading(true);
     if (isFavorite) {
       removeFavMutation.mutate({ paperId });
     } else {
       addFavMutation.mutate({ paperId });
     }
-  };
+  }, [isFavorite, paperId, addFavMutation, removeFavMutation]);
 
   return (
     <Button

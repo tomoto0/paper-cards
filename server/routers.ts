@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { 
   getAllKeywords, 
@@ -414,39 +414,27 @@ export const appRouter = router({
   }),
 
   favorites: router({
-    add: publicProcedure
+    add: protectedProcedure
       .input(z.object({ paperId: z.number() }))
       .mutation(async ({ input, ctx }) => {
-        if (!ctx.user) {
-          throw new Error('User not authenticated');
-        }
         const result = await addFavorite(ctx.user.id, input.paperId);
         return { success: !!result, favorite: result };
       }),
     
-    remove: publicProcedure
+    remove: protectedProcedure
       .input(z.object({ paperId: z.number() }))
       .mutation(async ({ input, ctx }) => {
-        if (!ctx.user) {
-          throw new Error('User not authenticated');
-        }
         const success = await removeFavorite(ctx.user.id, input.paperId);
         return { success };
       }),
     
-    list: publicProcedure.query(async ({ ctx }) => {
-      if (!ctx.user) {
-        return [];
-      }
+    list: protectedProcedure.query(async ({ ctx }) => {
       return await getFavorites(ctx.user.id);
     }),
     
-    check: publicProcedure
+    check: protectedProcedure
       .input(z.object({ paperId: z.number() }))
       .query(async ({ input, ctx }) => {
-        if (!ctx.user) {
-          return false;
-        }
         return await isFavorite(ctx.user.id, input.paperId);
       }),
   }),

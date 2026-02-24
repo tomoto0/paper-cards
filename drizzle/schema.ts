@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, bigint } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, bigint, foreignKey } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -55,3 +55,26 @@ export const papers = mysqlTable("papers", {
 
 export type Paper = typeof papers.$inferSelect;
 export type InsertPaper = typeof papers.$inferInsert;
+
+export const favorites = mysqlTable(
+  "favorites",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    paperId: int("paperId").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ([
+    foreignKey({
+      columns: [table.userId],
+      foreignColumns: [users.id],
+    }),
+    foreignKey({
+      columns: [table.paperId],
+      foreignColumns: [papers.id],
+    }),
+  ])
+);
+
+export type Favorite = typeof favorites.$inferSelect;
+export type InsertFavorite = typeof favorites.$inferInsert;

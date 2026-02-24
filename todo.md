@@ -45,3 +45,13 @@
 - [x] Frontend: Add sort buttons (relevance, date, citations) to SearchFilterBar
 - [x] Frontend: Integrate sort functionality with search results
 - [x] Tests: Write tests for sort functionality (26/26 tests passed)
+
+
+## Favorites Feature
+- [x] Backend: Create favorites table with userId and paperId foreign keys
+- [x] Backend: Implement query functions (addFavorite, removeFavorite, getFavorites)
+- [x] Backend: Create tRPC procedures for favorites operations
+- [x] Frontend: Add heart button component to paper cards
+- [x] Frontend: Create Favorites page with list of bookmarked papers
+- [x] Frontend: Integrate favorites into navigation
+- [x] Tests: Write tests for favorites functionality (34/34 tests passed)

@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PaperDetailDialog } from "@/components/PaperDetailDialog";
 import { SearchFilterBar } from "@/components/SearchFilterBar";
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { toast } from "sonner";
 import { 
   Search, 
@@ -23,7 +24,8 @@ import {
   RefreshCw,
   ArrowUpDown,
   X,
-  Loader2
+  Loader2,
+  Heart
 } from "lucide-react";
 
 type SortBy = 'createdAt' | 'publishedAt' | 'journal' | 'relevance' | 'citations';
@@ -176,6 +178,15 @@ export default function Home() {
             </div>
             
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.href = '/favorites'}
+                className="gap-2"
+              >
+                <Heart className="h-4 w-4" />
+                お気に入り
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -436,6 +447,9 @@ export default function Home() {
                       <Search className="h-3 w-3" />
                       X
                     </Button>
+                    <div className="flex-1" onClick={(e) => e.stopPropagation()}>
+                      <FavoriteButton paperId={paper.id} />
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"

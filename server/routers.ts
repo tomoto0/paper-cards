@@ -17,7 +17,11 @@ import {
   updatePaperTranslation,
   findRelatedPapers,
   searchPapers,
-  getCategories
+  getCategories,
+  addFavorite,
+  removeFavorite,
+  getFavorites,
+  isFavorite
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 
@@ -407,6 +411,44 @@ export const appRouter = router({
       
       return { success: true, message: `${translated}件の論文を翻訳しました`, count: translated };
     }),
+  }),
+
+  favorites: router({
+    add: publicProcedure
+      .input(z.object({ paperId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          throw new Error('User not authenticated');
+        }
+        const result = await addFavorite(ctx.user.id, input.paperId);
+        return { success: !!result, favorite: result };
+      }),
+    
+    remove: publicProcedure
+      .input(z.object({ paperId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          throw new Error('User not authenticated');
+        }
+        const success = await removeFavorite(ctx.user.id, input.paperId);
+        return { success };
+      }),
+    
+    list: publicProcedure.query(async ({ ctx }) => {
+      if (!ctx.user) {
+        return [];
+      }
+      return await getFavorites(ctx.user.id);
+    }),
+    
+    check: publicProcedure
+      .input(z.object({ paperId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        if (!ctx.user) {
+          return false;
+        }
+        return await isFavorite(ctx.user.id, input.paperId);
+      }),
   }),
 });
 

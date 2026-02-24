@@ -1,6 +1,6 @@
 import { eq, desc, asc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, keywords, papers, Keyword, InsertKeyword, Paper, InsertPaper } from "../drizzle/schema";
+import { InsertUser, users, keywords, papers, Keyword, InsertKeyword, Paper, InsertPaper, favorites, Favorite, InsertFavorite } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -421,5 +421,118 @@ export async function findRelatedPapers(paperId: number, limit: number = 5): Pro
   } catch (error) {
     console.error("[Database] Failed to find related papers:", error);
     return [];
+  }
+}
+
+
+// Favorites functions
+export async function addFavorite(userId: number, paperId: number): Promise<Favorite | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add favorite: database not available");
+    return null;
+  }
+
+  try {
+    // Check if favorite already exists
+    const existing = await db
+      .select()
+      .from(favorites)
+      .where(sql`${favorites.userId} = ${userId} AND ${favorites.paperId} = ${paperId}`)
+      .limit(1);
+
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    // Insert new favorite
+    const result = await db
+      .insert(favorites)
+      .values({
+        userId,
+        paperId,
+      });
+
+    // Fetch and return the inserted favorite
+    const inserted = await db
+      .select()
+      .from(favorites)
+      .where(sql`${favorites.userId} = ${userId} AND ${favorites.paperId} = ${paperId}`)
+      .limit(1);
+
+    return inserted[0] || null;
+  } catch (error) {
+    console.error("[Database] Failed to add favorite:", error);
+    return null;
+  }
+}
+
+export async function removeFavorite(userId: number, paperId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot remove favorite: database not available");
+    return false;
+  }
+
+  try {
+    const result = await db
+      .delete(favorites)
+      .where(sql`${favorites.userId} = ${userId} AND ${favorites.paperId} = ${paperId}`);
+
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to remove favorite:", error);
+    return false;
+  }
+}
+
+export async function getFavorites(userId: number): Promise<Paper[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get favorites: database not available");
+    return [];
+  }
+
+  try {
+    const userFavorites = await db
+      .select()
+      .from(favorites)
+      .where(eq(favorites.userId, userId));
+
+    if (userFavorites.length === 0) {
+      return [];
+    }
+
+    const paperIds = userFavorites.map(f => f.paperId);
+    const favoritePapers = await db
+      .select()
+      .from(papers)
+      .where(sql`${papers.id} IN (${sql.join(paperIds)})`);
+
+    return favoritePapers;
+  } catch (error) {
+    console.error("[Database] Failed to get favorites:", error);
+    return [];
+  }
+}
+
+export async function isFavorite(userId: number, paperId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot check favorite: database not available");
+    return false;
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(favorites)
+      .where(sql`${favorites.userId} = ${userId} AND ${favorites.paperId} = ${paperId}`)
+      .limit(1);
+
+    return result.length > 0;
+  } catch (error) {
+    console.error("[Database] Failed to check favorite:", error);
+    return false;
   }
 }

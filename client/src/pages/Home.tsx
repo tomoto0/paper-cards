@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,8 +53,14 @@ export default function Home() {
   const { data: keywords = [], isLoading: keywordsLoading } = trpc.keywords.list.useQuery();
   const { data: papers = [], isLoading: papersLoading } = trpc.papers.list.useQuery({ sortBy });
   const { data: categories = [], isLoading: categoriesLoading } = trpc.papers.categories.useQuery();
+  
+  // Memoize search query input to prevent infinite loops
+  const searchInput = useMemo(() => {
+    return { query: searchQuery, ...filters, sortBy };
+  }, [searchQuery, filters, sortBy]);
+  
   const { data: searchResults = [], isLoading: searchLoading } = trpc.papers.search.useQuery(
-    { query: searchQuery, ...filters, sortBy },
+    searchInput,
     { enabled: !!searchQuery || Object.keys(filters).length > 0 }
   );
   

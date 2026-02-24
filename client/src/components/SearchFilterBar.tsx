@@ -46,7 +46,6 @@ export function SearchFilterBar({
   const [endDate, setEndDate] = useState("");
   const [category, setCategory] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>(currentSort);
 
   const handleSearch = useCallback(() => {
     onSearch(searchQuery);
@@ -71,7 +70,6 @@ export function SearchFilterBar({
   }, [onFilter]);
 
   const handleSortChange = useCallback((newSort: SortOption) => {
-    setSortBy(newSort);
     const sortMap: Record<SortOption, 'createdAt' | 'publishedAt' | 'journal' | 'relevance' | 'citations'> = {
       relevance: 'relevance',
       date: 'publishedAt',
@@ -88,6 +86,9 @@ export function SearchFilterBar({
     date: '日付',
     citations: '引用数',
   };
+
+  // Sync local sortBy state with currentSort prop
+  const displaySort = currentSort;
 
   return (
     <div className="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200">
@@ -269,20 +270,19 @@ export function SearchFilterBar({
           <ArrowUpDown className="h-4 w-4" />
           ソート:
         </span>
-        <div className="flex gap-1">
-          {(Object.keys(sortLabels) as SortOption[]).map((sort) => (
-            <Button
-              key={sort}
-              variant={sortBy === sort ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleSortChange(sort)}
-              disabled={isLoading}
-              className={`text-xs ${sortBy === sort ? "bg-indigo-600 text-white" : ""}`}
-            >
-              {sortLabels[sort]}
-            </Button>
-          ))}
-        </div>
+          <div className="flex gap-1">
+            {(Object.keys(sortLabels) as SortOption[]).map((sort) => (
+              <Button
+                key={sort}
+                variant={displaySort === sort ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSortChange(sort)}
+                disabled={isLoading}
+              >
+                {sortLabels[sort]}
+              </Button>
+            ))}
+          </div>
       </div>
     </div>
   );

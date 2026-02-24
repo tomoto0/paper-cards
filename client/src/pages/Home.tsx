@@ -37,7 +37,16 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<any>({});
-  const [currentSort, setCurrentSort] = useState<'relevance' | 'date' | 'citations'>('relevance');
+  
+  // Compute currentSort from sortBy
+  const sortMap: Record<SortBy, 'relevance' | 'date' | 'citations'> = {
+    'createdAt': 'relevance',
+    'publishedAt': 'date',
+    'journal': 'relevance',
+    'relevance': 'relevance',
+    'citations': 'citations',
+  };
+  const currentSort = sortMap[sortBy];
   
   const utils = trpc.useUtils();
   
@@ -322,17 +331,9 @@ export default function Home() {
         <SearchFilterBar
           onSearch={setSearchQuery}
           onFilter={setFilters}
-          onSort={(newSort) => {
-            setSortBy(newSort);
-            const sortMap: Record<string, 'relevance' | 'date' | 'citations'> = {
-              'relevance': 'relevance',
-              'publishedAt': 'date',
-              'citations': 'citations',
-            };
-            setCurrentSort(sortMap[newSort] || 'relevance');
-          }}
+          onSort={setSortBy}
           categories={categories}
-          isLoading={searchLoading}
+          isLoading={searchLoading || papersLoading}
           currentSort={currentSort}
         />
 

@@ -55,3 +55,8 @@
 - [x] Frontend: Create Favorites page with list of bookmarked papers
 - [x] Frontend: Integrate favorites into navigation
 - [x] Tests: Write tests for favorites functionality (34/34 tests passed)
+
+
+## Bug Fixes
+- [x] Fix: Maximum update depth exceeded error in Home.tsx
+- [x] Fix: Infinite loop in state management

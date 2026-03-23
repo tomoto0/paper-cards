@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { addFavorite, removeFavorite, getFavorites, isFavorite, addPaper, addUser } from "./db";
+import { addFavorite, removeFavorite, getFavorites, isFavorite, addPaper, getDb } from "./db";
+import { users } from "../drizzle/schema";
 import { InsertUser, InsertPaper } from "../drizzle/schema";
 
 describe("Favorites Functionality", () => {
@@ -30,10 +31,11 @@ describe("Favorites Functionality", () => {
 
   beforeAll(async () => {
     // Create test user
-    await addUser(testUser);
-    // Note: In a real scenario, we'd fetch the created user ID from the database
-    // For this test, we'll assume userId = 1 (first user in test database)
-    userId = 1;
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    
+    const result = await db.insert(users).values(testUser);
+    userId = result[0].insertId as number;
 
     // Create test paper
     const paper = await addPaper(testPaper);
@@ -92,9 +94,3 @@ describe("Favorites Functionality", () => {
     expect(result).toBeNull();
   });
 });
-
-// Helper function to add user (would normally be in db.ts)
-async function addUser(user: InsertUser): Promise<void> {
-  // This is a placeholder - in real implementation, this would use the database
-  console.log("[Test] Adding user:", user);
-}

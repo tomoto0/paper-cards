@@ -4,8 +4,8 @@ import { searchPapers, getCategories, addPaper, getAllPapers } from "./db";
 describe("Papers Search & Filtering", () => {
   const testPapers = [
     {
-      arxivId: "test-2401-001",
-      title: "Machine Learning Fundamentals",
+      arxivId: `test-search-${Date.now()}-001`,
+      title: `TEST-UNIQUE-001 Machine Learning Fundamentals`,
       titleJa: "機械学習の基礎",
       abstract: "An introduction to machine learning concepts and algorithms",
       abstractJa: "機械学習の概念とアルゴリズムの紹介",
@@ -17,8 +17,8 @@ describe("Papers Search & Filtering", () => {
       keyword: "machine learning",
     },
     {
-      arxivId: "test-2401-002",
-      title: "Deep Learning Applications",
+      arxivId: `test-search-${Date.now()}-002`,
+      title: `TEST-UNIQUE-002 Deep Learning Applications`,
       titleJa: "深層学習の応用",
       abstract: "Practical applications of deep learning in computer vision",
       abstractJa: "コンピュータビジョンにおける深層学習の実用的応用",
@@ -30,8 +30,8 @@ describe("Papers Search & Filtering", () => {
       keyword: "deep learning",
     },
     {
-      arxivId: "test-2401-003",
-      title: "Natural Language Processing",
+      arxivId: `test-search-${Date.now()}-003`,
+      title: `TEST-UNIQUE-003 Natural Language Processing`,
       titleJa: "自然言語処理",
       abstract: "Recent advances in NLP using transformer models",
       abstractJa: "トランスフォーマーモデルを使用したNLPの最近の進歩",
@@ -47,14 +47,18 @@ describe("Papers Search & Filtering", () => {
   beforeAll(async () => {
     // Add test papers to database
     for (const paper of testPapers) {
-      await addPaper(paper);
+      const result = await addPaper(paper);
+      console.log(`[Test] Added paper: ${paper.arxivId}`, result ? 'success' : 'failed');
     }
+    // Verify papers were added
+    const allPapers = await getAllPapers();
+    console.log(`[Test] Total papers in database: ${allPapers.length}`);
   });
 
   it("should search papers by title", async () => {
-    const results = await searchPapers("Machine");
+    const results = await searchPapers("TEST-UNIQUE-001");
     expect(results.length).toBeGreaterThan(0);
-    expect(results.some(p => p.title.toLowerCase().includes("machine"))).toBe(true);
+    expect(results.some(p => p.title.includes("TEST-UNIQUE-001") || p.titleJa?.includes("TEST-UNIQUE-001"))).toBe(true);
   });
 
   it("should search papers by Japanese title", async () => {
@@ -64,9 +68,9 @@ describe("Papers Search & Filtering", () => {
   });
 
   it("should search papers by author", async () => {
-    const results = await searchPapers("John Smith");
+    const results = await searchPapers(undefined, { author: "John Smith" });
     expect(results.length).toBeGreaterThan(0);
-    expect(results.some(p => p.authors.includes("John Smith"))).toBe(true);
+    expect(results.every(p => p.authors.includes("John Smith"))).toBe(true);
   });
 
   it("should filter papers by author", async () => {

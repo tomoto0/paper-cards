@@ -1,4 +1,4 @@
-import { eq, desc, asc, sql } from "drizzle-orm";
+import { eq, desc, asc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, keywords, papers, Keyword, InsertKeyword, Paper, InsertPaper, favorites, Favorite, InsertFavorite } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -278,12 +278,14 @@ export async function searchPapers(
     // Filter by search query (title, abstract, authors)
     if (query && query.trim()) {
       const searchLower = query.toLowerCase();
+      const beforeFilter = allPapers.length;
       allPapers = allPapers.filter(paper => {
-        const titleMatch = (paper.titleJa || paper.title).toLowerCase().includes(searchLower);
-        const abstractMatch = (paper.abstractJa || paper.abstract).toLowerCase().includes(searchLower);
+        const titleMatch = paper.title.toLowerCase().includes(searchLower) || (paper.titleJa || '').toLowerCase().includes(searchLower);
+        const abstractMatch = paper.abstract.toLowerCase().includes(searchLower) || (paper.abstractJa || '').toLowerCase().includes(searchLower);
         const authorsMatch = paper.authors.toLowerCase().includes(searchLower);
         return titleMatch || abstractMatch || authorsMatch;
       });
+      console.log('[searchPapers] After query filter:', beforeFilter, '->', allPapers.length);
     }
     
     // Filter by author
@@ -504,10 +506,14 @@ export async function getFavorites(userId: number): Promise<Paper[]> {
     }
 
     const paperIds = userFavorites.map(f => f.paperId);
+    if (paperIds.length === 0) {
+      return [];
+    }
+    
     const favoritePapers = await db
       .select()
       .from(papers)
-      .where(sql`${papers.id} IN (${sql.join(paperIds)})`);
+      .where(inArray(papers.id, paperIds));
 
     return favoritePapers;
   } catch (error) {

@@ -310,7 +310,9 @@ export const appRouter = router({
       }
     }),
     
-    fetch: publicProcedure.mutation(async () => {
+    fetch: publicProcedure
+      .input(z.object({ keywords: z.array(z.string()).optional() }).optional())
+      .mutation(async ({ input }) => {
       const activeKeywords = await getActiveKeywords();
       if (activeKeywords.length === 0) {
         return { success: false, message: 'No active keywords', count: 0 };

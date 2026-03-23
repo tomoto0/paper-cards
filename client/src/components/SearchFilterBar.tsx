@@ -26,7 +26,7 @@ interface SearchFilterBarProps {
     endDate?: number;
     category?: string;
   }) => void;
-  onSort: (sortBy: 'createdAt' | 'publishedAt' | 'journal' | 'relevance' | 'citations') => void;
+  onSort: (sortBy: 'relevance' | 'date' | 'citations') => void;
   categories: string[];
   isLoading?: boolean;
   currentSort?: SortOption;
@@ -70,12 +70,7 @@ export function SearchFilterBar({
   }, [onFilter]);
 
   const handleSortChange = useCallback((newSort: SortOption) => {
-    const sortMap: Record<SortOption, 'createdAt' | 'publishedAt' | 'journal' | 'relevance' | 'citations'> = {
-      relevance: 'relevance',
-      date: 'publishedAt',
-      citations: 'citations',
-    };
-    onSort(sortMap[newSort]);
+    onSort(newSort);
   }, [onSort]);
 
   const hasActiveFilters =

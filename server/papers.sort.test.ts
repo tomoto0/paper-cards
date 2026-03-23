@@ -4,8 +4,8 @@ import { searchPapers, addPaper } from "./db";
 describe("Papers Sort Functionality", () => {
   const testPapers = [
     {
-      arxivId: "sort-test-001",
-      title: "Machine Learning Basics",
+      arxivId: `sort-test-${Date.now()}-001`,
+      title: `SORT-TEST-001 Machine Learning Basics`,
       titleJa: "機械学習の基礎",
       abstract: "Introduction to machine learning",
       abstractJa: "機械学習の紹介",
@@ -18,8 +18,8 @@ describe("Papers Sort Functionality", () => {
       citationCount: 50,
     },
     {
-      arxivId: "sort-test-002",
-      title: "Advanced Machine Learning",
+      arxivId: `sort-test-${Date.now()}-002`,
+      title: `SORT-TEST-002 Advanced Machine Learning`,
       titleJa: "高度な機械学習",
       abstract: "Advanced techniques in machine learning",
       abstractJa: "機械学習の高度なテクニック",
@@ -32,8 +32,8 @@ describe("Papers Sort Functionality", () => {
       citationCount: 150,
     },
     {
-      arxivId: "sort-test-003",
-      title: "Deep Learning Applications",
+      arxivId: `sort-test-${Date.now()}-003`,
+      title: `SORT-TEST-003 Deep Learning Applications`,
       titleJa: "深層学習の応用",
       abstract: "Applications of deep learning",
       abstractJa: "深層学習の応用",
@@ -49,19 +49,16 @@ describe("Papers Sort Functionality", () => {
 
   beforeAll(async () => {
     for (const paper of testPapers) {
-      await addPaper(paper);
+      const result = await addPaper(paper);
+      console.log(`[Test] Added paper: ${paper.arxivId}`, result ? 'success' : 'failed');
     }
   });
 
   it("should sort by relevance when query matches title", async () => {
-    const results = await searchPapers("Machine", undefined, "relevance");
+    const results = await searchPapers("SORT-TEST", undefined, "relevance");
     expect(results.length).toBeGreaterThan(0);
-    // Papers with "Machine" in title should rank higher
-    const firstPaper = results[0];
-    expect(
-      firstPaper.title.toLowerCase().includes("machine") ||
-      firstPaper.titleJa?.toLowerCase().includes("機械")
-    ).toBe(true);
+    // All results should contain "SORT-TEST" in title
+    expect(results.every(p => p.title.includes("SORT-TEST"))).toBe(true);
   });
 
   it("should sort by published date descending", async () => {

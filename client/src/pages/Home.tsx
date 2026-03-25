@@ -100,12 +100,28 @@ export default function Home() {
     },
   });
 
+  const deleteKeywordMutation = trpc.keywords.delete.useMutation({
+    onSuccess: () => {
+      utils.keywords.list.invalidate();
+      toast.success("キーワードを削除しました");
+    },
+    onError: () => {
+      toast.error("キーワードの削除に失敗しました");
+    },
+  });
+
   const handleAddKeyword = (e: React.FormEvent) => {
     e.preventDefault();
     if (newKeyword.trim()) {
       addKeywordMutation.mutate({ keyword: newKeyword });
     }
   };
+
+  const handleDeleteKeyword = useCallback((id: number) => {
+    if (confirm("このキーワードを削除してもよろしいですか？")) {
+      deleteKeywordMutation.mutate({ id });
+    }
+  }, [deleteKeywordMutation]);
 
   const handleFetchPapers = useCallback(() => {
     if (keywords.length === 0) {
@@ -257,10 +273,9 @@ export default function Home() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => {
-                                  // Delete keyword logic would go here
-                                }}
-                                className="h-6 w-6 p-0"
+                                onClick={() => handleDeleteKeyword(keyword.id)}
+                                disabled={deleteKeywordMutation.isPending}
+                                className="h-6 w-6 p-0 hover:bg-red-100 hover:text-red-600 transition-colors"
                               >
                                 <X className="h-3 w-3" />
                               </Button>

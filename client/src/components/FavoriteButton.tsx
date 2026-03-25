@@ -13,17 +13,18 @@ export function FavoriteButton({ paperId, onToggle }: FavoriteButtonProps) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Check if paper is favorited
-  const { data: isFav } = trpc.favorites.check.useQuery(
-    { paperId },
-    { enabled: !!paperId }
-  );
-
-  useEffect(() => {
-    if (isFav !== undefined) {
-      setIsFavorite(isFav);
-    }
-  }, [isFav]);
+  // Note: Disabled favorites.check query to prevent excessive API calls
+  // Users can still add/remove favorites via mutations
+  // const { data: isFav } = trpc.favorites.check.useQuery(
+  //   { paperId },
+  //   { enabled: !!paperId }
+  // );
+  //
+  // useEffect(() => {
+  //   if (isFav !== undefined) {
+  //     setIsFavorite(isFav);
+  //   }
+  // }, [isFav]);
 
   const addFavMutation = trpc.favorites.add.useMutation({
     onSuccess: () => {

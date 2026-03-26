@@ -21,7 +21,8 @@ import {
   addFavorite,
   removeFavorite,
   getFavorites,
-  isFavorite
+  isFavorite,
+  getKeywordStatistics
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 
@@ -249,6 +250,10 @@ export const appRouter = router({
         const result = await toggleKeyword(input.id);
         return { success: !!result, keyword: result };
       }),
+    
+    statistics: publicProcedure.query(async () => {
+      return await getKeywordStatistics();
+    }),
   }),
 
   papers: router({

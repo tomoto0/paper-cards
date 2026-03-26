@@ -542,3 +542,41 @@ export async function isFavorite(userId: number, paperId: number): Promise<boole
     return false;
   }
 }
+
+
+// Keyword Statistics functions
+export interface KeywordStatistic {
+  keywordId: number;
+  keyword: string;
+  count: number;
+  isActive: boolean;
+}
+
+export async function getKeywordStatistics(): Promise<KeywordStatistic[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  try {
+    const result = await db
+      .select({
+        keywordId: keywords.id,
+        keyword: keywords.keyword,
+        isActive: keywords.isActive,
+        count: sql<number>`COUNT(${papers.id})`.as('count'),
+      })
+      .from(keywords)
+      .leftJoin(papers, eq(papers.keyword, keywords.keyword))
+      .groupBy(keywords.id, keywords.keyword, keywords.isActive)
+      .orderBy(desc(sql<number>`COUNT(${papers.id})`));
+    
+    return result.map(row => ({
+      keywordId: row.keywordId,
+      keyword: row.keyword,
+      count: row.count || 0,
+      isActive: row.isActive,
+    }));
+  } catch (error) {
+    console.error("[Database] Failed to get keyword statistics:", error);
+    return [];
+  }
+}

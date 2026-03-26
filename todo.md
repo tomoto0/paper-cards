@@ -65,3 +65,11 @@
   - Added handleDeleteKeyword function with confirmation dialog
   - Added visual feedback (disabled state, hover color change)
   - Created comprehensive keywords.test.ts with 13 tests (all passing)
+
+## Keyword Statistics Dashboard
+- [x] Backend: Implement getKeywordStatistics query to count papers per keyword
+- [x] Backend: Create tRPC procedure for keywords.statistics
+- [x] Frontend: Create KeywordStatistics component with chart visualization (bar chart, pie chart, summary cards, detailed table)
+- [x] Frontend: Integrate dashboard into Home page (displayed above search bar)
+- [x] Tests: Write tests for statistics functionality (8/8 tests passing)
+- [x] UI: Ensure responsive design for dashboard (responsive charts with recharts)

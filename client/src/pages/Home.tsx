@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { PaperDetailDialog } from "@/components/PaperDetailDialog";
 import { SearchFilterBar } from "@/components/SearchFilterBar";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { KeywordStatistics } from "@/components/KeywordStatistics";
 import { toast } from "sonner";
 import { 
   Search, 
@@ -292,6 +293,11 @@ export default function Home() {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
+            {/* Keyword Statistics Dashboard */}
+            <div className="mb-8">
+              <KeywordStatistics />
+            </div>
+
             {/* Search and Filter Bar */}
             <SearchFilterBar
               onSearch={(query) => setSearchQuery(query)}

@@ -73,3 +73,13 @@
 - [x] Frontend: Integrate dashboard into Home page (displayed above search bar)
 - [x] Tests: Write tests for statistics functionality (8/8 tests passing)
 - [x] UI: Ensure responsive design for dashboard (responsive charts with recharts)
+
+
+## OGP & SNS Meta Tags
+- [x] Generate professional OGP images (1200×630px for Facebook, 1024×512px for Twitter)
+- [x] Add comprehensive Open Graph meta tags (og:type, og:title, og:description, og:url, og:site_name, og:locale: ja_JP)
+- [x] Add OGP image meta tags (og:image, og:image:secure_url, og:image:width, og:image:height, og:image:type, og:image:alt)
+- [x] Add Twitter / X meta tags (twitter:card: summary_large_image, twitter:site, twitter:creator, twitter:image, twitter:image:alt)
+- [x] Add LINE meta tags (line:og:image)
+- [x] Add theme-color and Apple mobile web app meta tags
+- [x] Add Apple touch icon

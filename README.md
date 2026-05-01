@@ -153,22 +153,22 @@ Paper Catcher follows a **three-tier architecture** with clear separation of con
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Client Layer (React)                      │
+│                    Client Layer (React)                     │
 │  - UI Components (Paper Cards, Keyword Manager)             │
 │  - tRPC Client (Type-safe API calls)                        │
 │  - State Management (React Query)                           │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                   Server Layer (Node.js)                     │
-│  - Express HTTP Server                                       │
+│                   Server Layer (Node.js)                    │
+│  - Express HTTP Server                                      │
 │  - tRPC Router (Procedures & Middleware)                    │
-│  - Business Logic (Paper Fetching, Translation)            │
+│  - Business Logic (Paper Fetching, Translation)      　    　│
 │  - Database Helpers (Query Functions)                       │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                 Data & External Services                     │
+│                 Data & External Services                    │
 │  - MySQL Database (Papers, Keywords, Users)                 │
 │  - arXiv API (Paper Discovery)                              │
 │  - OpenAI API (Translation Service)                         │
